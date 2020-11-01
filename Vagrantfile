@@ -6,7 +6,7 @@
 NUM_MASTER_NODE = 1
 NUM_WORKER_NODE = 2
 
-IP_NW = "192.168.56."
+IP_NW = "192.168.0."
 MASTER_IP_START = 1
 NODE_IP_START = 2
 LB_IP_START = 30
@@ -23,7 +23,7 @@ Vagrant.configure("2") do |config|
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
   # config.vm.box = "base"
-  config.vm.box = "ubuntu/bionic64"
+  config.vm.box = "hashicorp/bionic64"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -40,6 +40,7 @@ Vagrant.configure("2") do |config|
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
   # config.vm.synced_folder "../data", "/vagrant_data"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
 
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
@@ -57,8 +58,8 @@ Vagrant.configure("2") do |config|
   (1..NUM_MASTER_NODE).each do |i|
       config.vm.define "kubemaster" do |node|
         # Name shown in the GUI
-        node.vm.provider "virtualbox" do |vb|
-            vb.name = "kubemaster"
+        node.vm.provider "hyperv" do |vb|
+            # vb.name = "kubemaster"
             vb.memory = 2048
             vb.cpus = 2
         end
@@ -67,7 +68,7 @@ Vagrant.configure("2") do |config|
         node.vm.network "forwarded_port", guest: 22, host: "#{2710 + i}"
 
         node.vm.provision "setup-hosts", :type => "shell", :path => "ubuntu/vagrant/setup-hosts.sh" do |s|
-          s.args = ["enp0s8"]
+          s.args = ["eth0"]
         end
 
         node.vm.provision "setup-dns", type: "shell", :path => "ubuntu/update-dns.sh"
@@ -79,8 +80,8 @@ Vagrant.configure("2") do |config|
   # Provision Worker Nodes
   (1..NUM_WORKER_NODE).each do |i|
     config.vm.define "kubenode0#{i}" do |node|
-        node.vm.provider "virtualbox" do |vb|
-            vb.name = "kubenode0#{i}"
+        node.vm.provider "hyperv" do |vb|
+            # vb.name = "kubenode0#{i}"
             vb.memory = 2048
             vb.cpus = 2
         end
@@ -89,7 +90,7 @@ Vagrant.configure("2") do |config|
                 node.vm.network "forwarded_port", guest: 22, host: "#{2720 + i}"
 
         node.vm.provision "setup-hosts", :type => "shell", :path => "ubuntu/vagrant/setup-hosts.sh" do |s|
-          s.args = ["enp0s8"]
+          s.args = ["eth0"]
         end
 
         node.vm.provision "setup-dns", type: "shell", :path => "ubuntu/update-dns.sh"
